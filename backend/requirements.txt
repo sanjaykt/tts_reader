@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+pydantic
+pyttsx3
+openai
+pdfplumber
+python-multipart
