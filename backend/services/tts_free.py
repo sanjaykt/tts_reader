@@ -1,21 +1,18 @@
-# services/tts_free.py — offline text-to-speech using the pyttsx3 library.
-# pyttsx3 talks directly to the operating system's built-in speech engine:
-# macOS → "say", Windows → SAPI, Linux → espeak.
-# No internet connection or API key required.
+# services/tts_free.py — offline-friendly text-to-speech using gTTS (Google TTS).
+# gTTS sends the text to Google's TTS API and returns MP3 audio as bytes.
+# No API key required. Requires an internet connection.
 
-import pyttsx3
+from gtts import gTTS
+from io import BytesIO
 
 
-def synthesize(text: str) -> str:
-    # init() starts the OS speech engine. This must be called before anything else.
-    engine = pyttsx3.init()
+def synthesize(text: str) -> bytes:
+    tts = gTTS(text=text, lang="en")
 
-    # Queues the text to be spoken. Nothing is spoken yet at this point.
-    engine.say(text)
+    # Write the MP3 output into an in-memory buffer instead of a file on disk.
+    # This keeps the service stateless — no temp files to manage or clean up.
+    buffer = BytesIO()
+    tts.write_to_fp(buffer)
+    buffer.seek(0)
 
-    # Actually speaks the queued text and blocks until it finishes.
-    # NOTE: this plays audio on the server machine, not the client's device.
-    # In a real app you would save the output to an audio file and return that instead.
-    engine.runAndWait()
-
-    return "ok"
+    return buffer.read()

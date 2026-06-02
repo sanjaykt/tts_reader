@@ -2,6 +2,7 @@
 # A router is like a mini-app: it groups related routes and gets mounted in main.py.
 
 from fastapi import APIRouter, UploadFile, File
+from fastapi.responses import StreamingResponse
 from ..models.request_models import TTSRequest
 from ..services import tts_free, tts_premium, pdf_extractor
 
@@ -23,6 +24,21 @@ def speak_free(request: TTSRequest):
 def speak_premium(request: TTSRequest):
     audio = tts_premium.synthesize(request.text, voice=request.voice)
     return {"audio": audio}
+
+
+# Streams free TTS audio directly to the client as MP3.
+# Flutter (and browsers) can play this by pointing an audio player at this URL.
+@router.post("/stream/free")
+def stream_free(request: TTSRequest):
+    audio = tts_free.synthesize(request.text)
+    return StreamingResponse(iter([audio]), media_type="audio/mpeg")
+
+
+# Streams premium TTS audio directly to the client as MP3.
+@router.post("/stream/premium")
+def stream_premium(request: TTSRequest):
+    audio = tts_premium.synthesize(request.text, voice=request.voice)
+    return StreamingResponse(iter([audio]), media_type="audio/mpeg")
 
 
 # Handles PDF file uploads and returns the extracted text.
