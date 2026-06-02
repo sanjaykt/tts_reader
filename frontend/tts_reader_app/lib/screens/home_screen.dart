@@ -70,6 +70,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
 
+    if (text.length > 5000) {
+      _showError(
+          'Text is too long (${text.length} characters). Maximum is 5,000. Try selecting a shorter section.');
+      return;
+    }
+
     setState(() {
       _loading = true;
       _status = 'Generating audio...';

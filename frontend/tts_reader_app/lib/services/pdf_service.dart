@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
@@ -25,10 +26,7 @@ class PdfService {
       throw Exception('PDF extraction failed: ${response.statusCode}');
     }
 
-    // Response body: {"text": "..."}
-    final raw = response.body;
-    final start = raw.indexOf('"text": "') + 9;
-    final end = raw.lastIndexOf('"');
-    return raw.substring(start, end);
+    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+    return decoded['text'] as String;
   }
 }

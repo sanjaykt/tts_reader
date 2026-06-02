@@ -1,10 +1,13 @@
 # routers/tts.py — defines the HTTP endpoints for all TTS-related features.
 # A router is like a mini-app: it groups related routes and gets mounted in main.py.
 
-from fastapi import APIRouter, UploadFile, File
+import asyncio
+from fastapi import APIRouter, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from ..models.request_models import TTSRequest
 from ..services import tts_free, tts_premium, pdf_extractor
+
+MAX_TTS_CHARS = 5000
 
 # APIRouter groups these routes together. main.py mounts this with prefix="/tts".
 router = APIRouter()
@@ -27,17 +30,23 @@ def speak_premium(request: TTSRequest):
 
 
 # Streams free TTS audio directly to the client as MP3.
-# Flutter (and browsers) can play this by pointing an audio player at this URL.
+# gTTS is a blocking network call so we run it in a thread to avoid blocking the event loop.
 @router.post("/stream/free")
-def stream_free(request: TTSRequest):
-    audio = tts_free.synthesize(request.text)
+async def stream_free(request: TTSRequest):
+    if len(request.text) > MAX_TTS_CHARS:
+        raise HTTPException(status_code=400, detail=f"Text too long. Maximum {MAX_TTS_CHARS} characters.")
+    loop = asyncio.get_event_loop()
+    audio = await loop.run_in_executor(None, tts_free.synthesize, request.text)
     return StreamingResponse(iter([audio]), media_type="audio/mpeg")
 
 
 # Streams premium TTS audio directly to the client as MP3.
 @router.post("/stream/premium")
-def stream_premium(request: TTSRequest):
-    audio = tts_premium.synthesize(request.text, voice=request.voice)
+async def stream_premium(request: TTSRequest):
+    if len(request.text) > MAX_TTS_CHARS:
+        raise HTTPException(status_code=400, detail=f"Text too long. Maximum {MAX_TTS_CHARS} characters.")
+    loop = asyncio.get_event_loop()
+    audio = await loop.run_in_executor(None, tts_premium.synthesize, request.text, request.voice)
     return StreamingResponse(iter([audio]), media_type="audio/mpeg")
 
 

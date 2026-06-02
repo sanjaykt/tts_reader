@@ -2,11 +2,17 @@
 # When you run the server, Python starts here.
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from .routers import tts
 
-# Creates the FastAPI app instance. The title shows up in the auto-generated
-# API docs at http://localhost:8000/docs
 app = FastAPI(title="TTS Reader API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8080"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Registers all routes defined in routers/tts.py under the /tts prefix.
 # So a route defined as /speak/free becomes /tts/speak/free.

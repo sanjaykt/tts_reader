@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
@@ -22,7 +23,7 @@ class TtsService {
     final response = await http.post(
       Uri.parse('$baseUrl$path'),
       headers: {'Content-Type': 'application/json'},
-      body: _encodeJson(body),
+      body: jsonEncode(body),
     );
 
     if (response.statusCode != 200) {
@@ -30,10 +31,5 @@ class TtsService {
     }
 
     return response.bodyBytes;
-  }
-
-  String _encodeJson(Map<String, dynamic> map) {
-    final entries = map.entries.map((e) => '"${e.key}": "${e.value}"');
-    return '{${entries.join(', ')}}';
   }
 }
