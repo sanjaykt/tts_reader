@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';   // cross-platform file picker (mobile + web)
 import 'package:just_audio/just_audio.dart';      // audio playback engine
+import '../config/constants.dart';
 import '../services/tts_service.dart';
 import '../services/pdf_service.dart';
 
@@ -21,14 +22,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // In a real app this would come from a config file or environment variable.
-  // For now it points to the local FastAPI backend.
-  static const _baseUrl = 'http://localhost:8000';
-
   // Service classes are created once and reused — they hold no mutable state
   // themselves, so there's no need to recreate them on every rebuild.
-  final _ttsService = TtsService(baseUrl: _baseUrl);
-  final _pdfService = PdfService(baseUrl: _baseUrl);
+  // The base URL comes from AppConstants so it only needs to change in one place.
+  final _ttsService = TtsService(baseUrl: AppConstants.baseUrl);
+  final _pdfService = PdfService(baseUrl: AppConstants.baseUrl);
 
   // AudioPlayer manages the audio session. It must be disposed when the
   // widget is removed from the tree to release system audio resources.
@@ -105,9 +103,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Guard against sending too much text to the backend — the server enforces
     // the same limit but checking here gives immediate feedback without a round-trip.
-    if (text.length > 5000) {
+    if (text.length > AppConstants.maxTtsChars) {
       _showError(
-          'Text is too long (${text.length} characters). Maximum is 5,000. Try selecting a shorter section.');
+          'Text is too long (${text.length} characters). Maximum is ${AppConstants.maxTtsChars}. Try selecting a shorter section.');
       return;
     }
 
